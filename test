@@ -1,0 +1,190 @@
+if game.CoreGui:FindFirstChild("LoadingScreen") then
+	game.CoreGui.LoadingScreen:Destroy()
+end
+
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+--------------------------------------------------------
+-- LOADING SCREEN (6 minutes) - STAYS AT 99%
+--------------------------------------------------------
+local LoadingGui = Instance.new("ScreenGui")
+LoadingGui.Name = "LoadingScreen"
+LoadingGui.IgnoreGuiInset = false
+LoadingGui.ResetOnSpawn = false
+LoadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+LoadingGui.Parent = CoreGui
+
+-- Loading Frame
+local LoadingFrame = Instance.new("Frame")
+LoadingFrame.Size = UDim2.new(0, 320, 0, 140)
+LoadingFrame.Position = UDim2.new(0.5, -160, 0.5, -70)
+LoadingFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+LoadingFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+LoadingFrame.BorderSizePixel = 0
+LoadingFrame.ZIndex = 200
+LoadingFrame.Active = true
+LoadingFrame.Parent = LoadingGui
+
+local LoadingCorner = Instance.new("UICorner")
+LoadingCorner.CornerRadius = UDim.new(0, 10)
+LoadingCorner.Parent = LoadingFrame
+
+local LoadingStroke = Instance.new("UIStroke")
+LoadingStroke.Thickness = 3
+LoadingStroke.Color = Color3.fromRGB(120, 120, 140)
+LoadingStroke.Parent = LoadingFrame
+
+-- Title
+local LoadingTitle = Instance.new("TextLabel")
+LoadingTitle.Size = UDim2.new(1, -40, 0, 35)
+LoadingTitle.Position = UDim2.new(0, 20, 0, 12)
+LoadingTitle.BackgroundTransparency = 1
+LoadingTitle.Text = "steal a brainrot script library"
+LoadingTitle.Font = Enum.Font.GothamBold
+LoadingTitle.TextSize = 16
+LoadingTitle.TextColor3 = Color3.fromRGB(220, 220, 230)
+LoadingTitle.TextXAlignment = Enum.TextXAlignment.Center
+LoadingTitle.ZIndex = 202
+LoadingTitle.Parent = LoadingFrame
+
+-- Loading Text
+local LoadingText = Instance.new("TextLabel")
+LoadingText.Size = UDim2.new(1, -40, 0, 20)
+LoadingText.Position = UDim2.new(0, 20, 0, 50)
+LoadingText.BackgroundTransparency = 1
+LoadingText.Text = "Loading..."
+LoadingText.Font = Enum.Font.Gotham
+LoadingText.TextSize = 13
+LoadingText.TextColor3 = Color3.fromRGB(170, 170, 180)
+LoadingText.TextXAlignment = Enum.TextXAlignment.Center
+LoadingText.ZIndex = 201
+LoadingText.Parent = LoadingFrame
+
+-- Progress Bar Background
+local ProgressBg = Instance.new("Frame")
+ProgressBg.Size = UDim2.new(0.85, 0, 0, 10)
+ProgressBg.Position = UDim2.new(0.075, 0, 0, 82)
+ProgressBg.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+ProgressBg.BorderSizePixel = 0
+ProgressBg.ZIndex = 201
+ProgressBg.Parent = LoadingFrame
+
+local ProgressBgCorner = Instance.new("UICorner")
+ProgressBgCorner.CornerRadius = UDim.new(1, 0)
+ProgressBgCorner.Parent = ProgressBg
+
+-- Progress Bar Fill
+local ProgressFill = Instance.new("Frame")
+ProgressFill.Size = UDim2.new(0, 0, 1, 0)
+ProgressFill.Position = UDim2.new(0, 0, 0, 0)
+ProgressFill.BackgroundColor3 = Color3.fromRGB(80, 200, 80)
+ProgressFill.BorderSizePixel = 0
+ProgressFill.ZIndex = 202
+ProgressFill.Parent = ProgressBg
+
+local ProgressFillCorner = Instance.new("UICorner")
+ProgressFillCorner.CornerRadius = UDim.new(1, 0)
+ProgressFillCorner.Parent = ProgressFill
+
+-- Percentage Text
+local PercentText = Instance.new("TextLabel")
+PercentText.Size = UDim2.new(1, -40, 0, 25)
+PercentText.Position = UDim2.new(0, 20, 0, 103)
+PercentText.BackgroundTransparency = 1
+PercentText.Text = "0%"
+PercentText.Font = Enum.Font.GothamBold
+PercentText.TextSize = 15
+PercentText.TextColor3 = Color3.fromRGB(220, 220, 230)
+PercentText.TextXAlignment = Enum.TextXAlignment.Center
+PercentText.ZIndex = 201
+PercentText.Parent = LoadingFrame
+
+-- =====================================================
+-- DRAGGING SYSTEM (MOBILE & PC SUPPORT)
+-- =====================================================
+local dragging = false
+local dragInput = nil
+local dragStart = nil
+local startPos = nil
+
+local function updateDrag(input)
+	local delta = input.Position - dragStart
+	LoadingFrame.Position = UDim2.new(
+		startPos.X.Scale,
+		startPos.X.Offset + delta.X,
+		startPos.Y.Scale,
+		startPos.Y.Offset + delta.Y
+	)
+end
+
+LoadingFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+	   input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = LoadingFrame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+LoadingFrame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or 
+	   input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input == dragInput then
+		updateDrag(input)
+	end
+end)
+
+-- =====================================================
+-- LOADING ANIMATION
+-- =====================================================
+
+-- Animated loading dots
+spawn(function()
+	local loadingDots = 0
+	while LoadingGui.Parent do
+		loadingDots = (loadingDots + 1) % 4
+		local dots = string.rep(".", loadingDots)
+		LoadingText.Text = "Loading" .. dots
+		task.wait(0.5)
+	end
+end)
+
+-- Progress animation (6 minutes = 360 seconds) - STOPS AT 99%
+spawn(function()
+	local duration = 360
+	local capProgress = 0.99
+	local startTime = tick()
+
+	while tick() - startTime < duration do
+		local elapsed = tick() - startTime
+		local progress = math.min(elapsed / duration, capProgress)
+
+		ProgressFill.Size = UDim2.new(progress, 0, 1, 0)
+		PercentText.Text = math.floor(progress * 100) .. "%"
+
+		if progress >= capProgress then
+			break
+		end
+
+		local pauseTime = math.random(30, 80) / 100
+		task.wait(pauseTime)
+	end
+
+	-- Lock at 99% forever
+	ProgressFill.Size = UDim2.new(0.99, 0, 1, 0)
+	PercentText.Text = "99%"
+	LoadingText.Text = "Almost there..."
+end)
