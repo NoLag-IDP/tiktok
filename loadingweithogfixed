@@ -1,0 +1,186 @@
+-- Services
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+
+local player = Players.LocalPlayer
+
+-- =====================================================
+-- LOADING SCREEN
+-- =====================================================
+
+if CoreGui:FindFirstChild("OGLBLoadingScreen") then
+    CoreGui.OGLBLoadingScreen:Destroy()
+end
+
+local LoadingGui = Instance.new("ScreenGui")
+LoadingGui.Name = "OGLBLoadingScreen"
+LoadingGui.IgnoreGuiInset = false
+LoadingGui.ResetOnSpawn = false
+LoadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+LoadingGui.Parent = CoreGui
+
+local LoadingFrame = Instance.new("Frame")
+LoadingFrame.Size = UDim2.new(0, 320, 0, 140)
+LoadingFrame.Position = UDim2.new(0.5, -160, 0.5, -70)
+LoadingFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+LoadingFrame.BackgroundColor3 = Color3.fromRGB(18, 13, 0)
+LoadingFrame.BorderSizePixel = 0
+LoadingFrame.ZIndex = 200
+LoadingFrame.Active = true
+LoadingFrame.Parent = LoadingGui
+Instance.new("UICorner", LoadingFrame).CornerRadius = UDim.new(0, 10)
+
+local LoadingStroke = Instance.new("UIStroke")
+LoadingStroke.Thickness = 1
+LoadingStroke.Color = Color3.fromRGB(58, 40, 0)
+LoadingStroke.Parent = LoadingFrame
+
+local LoadingTitle = Instance.new("TextLabel")
+LoadingTitle.Size = UDim2.new(1, -24, 0, 32)
+LoadingTitle.Position = UDim2.new(0, 12, 0, 10)
+LoadingTitle.BackgroundTransparency = 1
+LoadingTitle.Text = "FORCE OG LUCKY BLOCK"
+LoadingTitle.Font = Enum.Font.GothamBold
+LoadingTitle.TextSize = 16
+LoadingTitle.TextColor3 = Color3.fromRGB(255, 215, 85)
+LoadingTitle.TextXAlignment = Enum.TextXAlignment.Left
+LoadingTitle.ZIndex = 202
+LoadingTitle.Parent = LoadingFrame
+
+local LoadingText = Instance.new("TextLabel")
+LoadingText.Size = UDim2.new(1, -24, 0, 20)
+LoadingText.Position = UDim2.new(0, 12, 0, 46)
+LoadingText.BackgroundTransparency = 1
+LoadingText.Text = "Loading..."
+LoadingText.Font = Enum.Font.Gotham
+LoadingText.TextSize = 12
+LoadingText.TextColor3 = Color3.fromRGB(138, 106, 32)
+LoadingText.TextXAlignment = Enum.TextXAlignment.Left
+LoadingText.ZIndex = 201
+LoadingText.Parent = LoadingFrame
+
+local ProgressBg = Instance.new("Frame")
+ProgressBg.Size = UDim2.new(1, -24, 0, 6)
+ProgressBg.Position = UDim2.new(0, 12, 0, 76)
+ProgressBg.BackgroundColor3 = Color3.fromRGB(30, 20, 0)
+ProgressBg.BorderSizePixel = 0
+ProgressBg.ZIndex = 201
+ProgressBg.Parent = LoadingFrame
+Instance.new("UICorner", ProgressBg).CornerRadius = UDim.new(1, 0)
+
+local ProgressFill = Instance.new("Frame")
+ProgressFill.Size = UDim2.new(0, 0, 1, 0)
+ProgressFill.BackgroundColor3 = Color3.fromRGB(255, 215, 85)
+ProgressFill.BorderSizePixel = 0
+ProgressFill.ZIndex = 202
+ProgressFill.Parent = ProgressBg
+Instance.new("UICorner", ProgressFill).CornerRadius = UDim.new(1, 0)
+
+local PercentText = Instance.new("TextLabel")
+PercentText.Size = UDim2.new(1, -24, 0, 20)
+PercentText.Position = UDim2.new(0, 12, 0, 92)
+PercentText.BackgroundTransparency = 1
+PercentText.Text = "0%"
+PercentText.Font = Enum.Font.GothamBold
+PercentText.TextSize = 13
+PercentText.TextColor3 = Color3.fromRGB(255, 215, 85)
+PercentText.TextXAlignment = Enum.TextXAlignment.Left
+PercentText.ZIndex = 201
+PercentText.Parent = LoadingFrame
+
+local SubText = Instance.new("TextLabel")
+SubText.Size = UDim2.new(1, -24, 0, 16)
+SubText.Position = UDim2.new(0, 12, 0, 116)
+SubText.BackgroundTransparency = 1
+SubText.Text = "MAKE SURE TO NOT LEAVE WITHIN 5 MINS OR IT WILL NOT WORK"
+SubText.Font = Enum.Font.Code
+SubText.TextSize = 9
+SubText.TextColor3 = Color3.fromRGB(100, 70, 0)
+SubText.TextXAlignment = Enum.TextXAlignment.Center
+SubText.TextWrapped = true
+SubText.ZIndex = 201
+SubText.Parent = LoadingFrame
+
+-- Dragging
+local dragging = false
+local dragInput = nil
+local dragStart = nil
+local startPos = nil
+
+local function updateDrag(input)
+    local delta = input.Position - dragStart
+    LoadingFrame.Position = UDim2.new(
+        startPos.X.Scale, startPos.X.Offset + delta.X,
+        startPos.Y.Scale, startPos.Y.Offset + delta.Y
+    )
+end
+
+LoadingFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or
+       input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = LoadingFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+LoadingFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or
+       input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        updateDrag(input)
+    end
+end)
+
+-- Animated loading dots
+task.spawn(function()
+    local dots = 0
+    while LoadingGui.Parent do
+        dots = (dots + 1) % 4
+        LoadingText.Text = "Loading" .. string.rep(".", dots)
+        task.wait(0.5)
+    end
+end)
+
+-- Progress bar animation
+task.spawn(function()
+    local duration = 195
+    local startTime = tick()
+    while tick() - startTime < duration do
+        local elapsed = tick() - startTime
+        local progress = math.min(elapsed / duration, 1)
+        ProgressFill.Size = UDim2.new(progress, 0, 1, 0)
+        PercentText.Text = math.floor(progress * 100) .. "%"
+        task.wait(math.random(30, 80) / 100)
+    end
+    ProgressFill.Size = UDim2.new(1, 0, 1, 0)
+    PercentText.Text = "100%"
+    LoadingText.Text = "Complete!"
+    task.wait(0.5)
+    local tweens = {
+        TweenService:Create(LoadingFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1}),
+        TweenService:Create(LoadingStroke, TweenInfo.new(0.5), {Transparency = 1}),
+        TweenService:Create(LoadingTitle, TweenInfo.new(0.5), {TextTransparency = 1}),
+        TweenService:Create(LoadingText, TweenInfo.new(0.5), {TextTransparency = 1}),
+        TweenService:Create(PercentText, TweenInfo.new(0.5), {TextTransparency = 1}),
+        TweenService:Create(SubText, TweenInfo.new(0.5), {TextTransparency = 1}),
+        TweenService:Create(ProgressBg, TweenInfo.new(0.5), {BackgroundTransparency = 1}),
+        TweenService:Create(ProgressFill, TweenInfo.new(0.5), {BackgroundTransparency = 1}),
+    }
+    for _, t in ipairs(tweens) do t:Play() end
+    task.wait(0.6)
+    LoadingGui:Destroy()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/NoLag-IDP/sablib/refs/heads/main/OGLB19"))()
+end)
